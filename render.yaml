@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: fastapi-todo
+    runtime: docker          # build from the Dockerfile in the repo root
+    plan: free
+    healthCheckPath: /docs   # Render pings this to know the app is up
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:        # Render injects the DB's internal URL here
+          name: todo-db
+          property: connectionString
+
+databases:
+  - name: todo-db
+    plan: free
+    databaseName: todos
+    user: todo

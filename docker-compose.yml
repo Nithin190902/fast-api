@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: todo
+      POSTGRES_PASSWORD: todo
+      POSTGRES_DB: todos
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # keep data across restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U todo -d todos"]
+      interval: 2s
+      retries: 15
+
+  api:
+    build: .                               # uses the Dockerfile in this folder
+    ports:
+      - "8000:8000"                        # host:container
+    environment:
+      # Host is "db" = the service name above. Compose gives it that DNS name.
+      DATABASE_URL: postgresql://todo:todo@db:5432/todos
+    depends_on:
+      db:
+        condition: service_healthy         # don't start api until Postgres accepts connections
+    volumes:
+      - .:/app                             # dev only: live code sync
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:
